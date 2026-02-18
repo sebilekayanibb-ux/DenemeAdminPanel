@@ -1,0 +1,44 @@
+﻿@model DenemeAdminPanel.Entities.Announcement
+
+@{
+    ViewData["Title"] = "Duyuruyu Düzenle";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 shadow-sm p-4 border rounded bg-light">
+            <h2 class="mb-4 text-primary">Duyuruyu Düzenle</h2>
+            <hr />
+
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <input type="hidden" asp-for="Id" />
+                <!-- CreatedDate is not posted from the form to avoid binding issues; it will remain unchanged on the server -->
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Duyuru Başlığı</label>
+                    <input asp-for="Title" class="form-control" placeholder="Başlık giriniz..." />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label">İçerik</label>
+                    <textarea asp-for="Content" class="form-control" rows="4" placeholder="Duyuru detaylarını yazınız..."></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">Güncelle</button>
+                    <a asp-action="Index" class="btn btn-secondary px-4">İptal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
