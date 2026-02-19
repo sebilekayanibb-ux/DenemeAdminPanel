@@ -45,6 +45,7 @@ namespace DenemeAdminPanel.Controllers
 
         // 4. SİLME: Belirli bir ID'ye sahip duyuruyu siler.
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);

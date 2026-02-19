@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Yönetim Paneli";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4" style="background: linear-gradient(45deg, #E5007D, #ff4da6); color: white; border-radius: 15px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase mb-1 opacity-75">Toplam Duyuru</h6>
+                        <h2 class="mb-0 fw-bold">@ViewBag.AnnouncementCount</h2>
+                    </div>
+                    <i class="fa fa-bullhorn fa-3x opacity-25"></i>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a asp-controller="Announcement" asp-action="Index" class="text-white text-decoration-none small">Yönet <i class="fa fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4" style="background-color: #ffffff; border-radius: 15px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted">Sistem Durumu</h6>
+                        <h2 class="mb-0 fw-bold text-success">Aktif</h2>
+                    </div>
+                    <i class="fa fa-check-circle fa-3x text-success opacity-25"></i>
+                </div>
+                <div class="card-footer bg-transparent border-0 small text-muted">
+                    Tüm servisler çalışıyor
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4" style="background-color: #363636; color: white; border-radius: 15px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-secondary">Yetkili</h6>
+                        <h2 class="mb-0 fw-bold">Sebile K.</h2>
+                    </div>
+                    <i class="fa fa-user-shield fa-3x text-secondary opacity-25"></i>
+                </div>
+                <div class="card-footer bg-transparent border-0 small text-secondary">
+                    İstanbul Senin Admin
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

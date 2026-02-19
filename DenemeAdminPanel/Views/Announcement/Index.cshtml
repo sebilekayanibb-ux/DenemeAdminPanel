@@ -1,45 +1,79 @@
 ﻿@model IEnumerable<DenemeAdminPanel.Entities.Announcement>
 
-@{
-    ViewData["Title"] = "Duyuru Yönetimi";
-}
-
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>📢 Duyuru Yönetimi</h2>
-        <a asp-action="Create" class="btn btn-primary">➕ Yeni Duyuru Ekle</a>
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 text-primary fw-bold">Duyuru Listesi</h5>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fa fa-plus me-1"></i> Yeni Duyuru Ekle
+        </a>
     </div>
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Başlık</th>
+                    <th>Tarih</th>
+                    <th>Durum</th>
+                    <th class="text-end">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong>@item.Title</strong></td>
+                        <td>@item.CreatedDate.ToShortDateString()</td>
+                        <td><span class="badge bg-success">Aktif</span></td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-1">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            <button type="button" onclick="confirmDelete(@item.Id)" class="btn btn-sm btn-outline-danger">
+                                <i class="fa fa-trash"></i>
+                            </button>
 
-    <table class="table table-hover table-bordered shadow-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>Başlık</th>
-                <th>İçerik</th>
-                <th>Yayın Tarihi</th>
-                <th class="text-center">İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Title</td>
-                    <td>@(item.Content.Length > 50 ? item.Content.Substring(0, 50) + "..." : item.Content)</td>
-                    <td>@item.CreatedDate.ToShortDateString()</td>
-                    <td class="text-center">
-                        <a asp-action="Edit" asp-controller="Announcement" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Düzenle</a>
-                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Silmek istediğine emin misin?')">Sil</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-            @if (!Model.Any())
-            {
-                <tr>
-                    <td colspan="4" class="text-center text-muted">Henüz hiç duyuru eklenmemiş.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                            @* Hidden form with antiforgery token for secure POST delete *@
+                            <form id="delete-form-@item.Id" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:none;">
+                                @Html.AntiForgeryToken()
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu duyuru kalıcı olarak silinecektir!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Evet, sil!',
+                cancelButtonText: 'Vazgeç'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Önce sayfadaki gizli formu bulup AJAX ile POST gönder (antiforgery token form içinde)
+                    var existingForm = document.getElementById('delete-form-' + id);
+                    if (existingForm) {
+                        // Basit ve güvenilir: gizli formu submit et (antiforgery token form içinde yer alır)
+                        existingForm.submit();
+                        return;
+                    }
+
+                    // Eğer gizli form bulunamazsa fallback olarak dinamik form oluşturup gönder
+                    var form = document.createElement('form');
+                    form.method = 'post';
+                    form.action = '/Announcement/Delete/' + id;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}
