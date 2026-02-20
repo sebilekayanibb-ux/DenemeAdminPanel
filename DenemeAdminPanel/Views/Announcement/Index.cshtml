@@ -1,70 +1,117 @@
 ﻿@model IEnumerable<DenemeAdminPanel.Entities.Announcement>
 
-<div class="card shadow-sm border-0 p-4" style="border-radius: 15px;">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold"><i class="fa fa-bullhorn me-2" style="color: #E5007D;"></i> Duyuru Listesi</h3>
-        <a asp-action="Create" class="btn text-white px-4 rounded-pill" style="background-color: #E5007D;">
-            <i class="fa fa-plus me-1"></i> Yeni Duyuru Ekle
-        </a>
+        <h3 class="fw-bold text-dark">Duyuru Yönetimi</h3>
+        <div>
+            <button id="btnBulkDelete" class="btn btn-danger me-2" style="display:none;">
+                <i class="fa fa-trash"></i> Seçilenleri Sil
+            </button>
+            <a asp-action="Create" class="btn text-white" style="background-color: #E5007D;">
+                <i class="fa fa-plus"></i> Yeni Ekle
+            </a>
+        </div>
     </div>
 
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Sıra</th>
-                <th>Başlık</th>
-                <th>Oluşturma</th>
-                <th>Durum</th>
-                <th class="text-end">İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+    <div class="table-responsive bg-white rounded shadow-sm p-3">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
                 <tr>
-                    <td><span class="badge bg-light text-dark border">@item.DisplayOrder</span></td>
-                    <td><strong>@item.Title</strong></td>
-                    <td>@item.CreatedDate.ToShortDateString()</td>
-                    <td>
-                        @if (item.IsActive)
-                        {
-                            <span class="badge bg-success px-3 rounded-pill">Aktif</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-danger px-3 rounded-pill">Pasif</span>
-                        }
-                    </td>
-                    <td class="text-end">
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning"><i class="fa fa-edit"></i></a>
-                        <button type="button" onclick="confirmDelete(@item.Id)" class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></button>
-                        <form id="delete-form-@item.Id" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:none;">
-                            @Html.AntiForgeryToken()
-                        </form>
-                    </td>
+                    <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                    <th style="width: 40px;"></th>
+                    <th>Görsel</th>
+                    <th>Başlık</th>
+                    <th>Sıra</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody id="sortable-body">
+                @foreach (var item in Model)
+                {
+                    <tr data-id="@item.Id" class="sortable-item">
+                        <td><input type="checkbox" class="select-item form-check-input" value="@item.Id"></td>
+                        <td><i class="fa fa-grip-vertical text-muted cursor-move" style="cursor:grab;"></i></td>
+                        <td>
+                            <img src="@item.ImageUrl" width="60" class="rounded" onerror="this.src='/images/no-image.jpg';">
+                        </td>
+                        <td>@item.Title</td>
+                        <td class="display-order">@item.DisplayOrder</td>
+                        <td>
+                            <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">
+                                @(item.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: "Bu duyuru silinecek!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#E5007D',
-                confirmButtonText: 'Evet, sil!',
-                cancelButtonText: 'Vazgeç'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            });
+        // --- SÜRÜKLE BIRAK SIRALAMA ---
+        const el = document.getElementById('sortable-body');
+        const sortable = new Sortable(el, {
+            animation: 150,
+            handle: '.fa-grip-vertical',
+            onEnd: function() {
+                let orderData = [];
+                document.querySelectorAll('#sortable-body tr').forEach((row, index) => {
+                    orderData.push({
+                        Id: parseInt(row.getAttribute('data-id')),
+                        NewOrder: index + 1
+                    });
+                });
+
+                // Sunucuya yeni sıralamayı gönder
+                fetch('/Announcement/UpdateOrder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                }).then(res => {
+                    if (res.ok) {
+                        // Sıra numaralarını ekranda güncelle
+                        document.querySelectorAll('.display-order').forEach((td, i) => td.innerText = i + 1);
+                    }
+                });
+            }
+        });
+
+        // --- TOPLU SİLME MANTIĞI ---
+        const selectAll = document.getElementById('selectAll');
+        const items = document.querySelectorAll('.select-item');
+        const bulkBtn = document.getElementById('btnBulkDelete');
+
+        selectAll.addEventListener('change', () => {
+            items.forEach(i => i.checked = selectAll.checked);
+            toggleBulkButton();
+        });
+
+        items.forEach(i => i.addEventListener('change', toggleBulkButton));
+
+        function toggleBulkButton() {
+            const selectedCount = document.querySelectorAll('.select-item:checked').length;
+            bulkBtn.style.display = selectedCount > 0 ? 'inline-block' : 'none';
         }
+
+        bulkBtn.addEventListener('click', () => {
+            if (confirm('Seçilen duyuruları silmek istediğinize emin misiniz?')) {
+                const ids = Array.from(document.querySelectorAll('.select-item:checked')).map(i => parseInt(i.value));
+
+                fetch('/Announcement/BulkDelete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ids)
+                }).then(res => {
+                    if (res.ok) location.reload();
+                });
+            }
+        });
     </script>
 }

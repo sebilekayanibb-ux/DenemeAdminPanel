@@ -96,6 +96,46 @@ namespace DenemeAdminPanel.Controllers
             return View(announcement);
         }
 
+        // --- TOPLU SİLME ---
+        [HttpPost]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            if (ids == null || !ids.Any()) return BadRequest();
+
+            var itemsToDelete = await _context.Announcements.Where(x => ids.Contains(x.Id)).ToListAsync();
+            _context.Announcements.RemoveRange(itemsToDelete);
+            await _context.SaveChangesAsync();
+
+            await ReorderAllAnnouncements(); // Boşlukları kapat
+            return Ok();
+        }
+
+        // --- SÜRÜKLE BIRAK SIRALAMA GÜNCELLEME ---
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrder([FromBody] List<OrderUpdateModel> orders)
+        {
+            if (orders == null) return BadRequest();
+
+            foreach (var item in orders)
+            {
+                var announcement = await _context.Announcements.FindAsync(item.Id);
+                if (announcement != null)
+                {
+                    announcement.DisplayOrder = item.NewOrder;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        // Yardımcı Model
+        public class OrderUpdateModel
+        {
+            public int Id { get; set; }
+            public int NewOrder { get; set; }
+        }
+
         // --- ARDIŞIK SIRALAMA MOTORU ---
         // Bu metod, her işlemden sonra veritabanındaki tüm duyuruları gezer, 
         // DisplayOrder'a göre dizer ve 1, 2, 3... diye boşluksuz numaralandırır.

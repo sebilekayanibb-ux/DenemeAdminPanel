@@ -34,17 +34,52 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="gradient-header p-5 shadow-lg d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="display-5 fw-bold mb-2">İstanbul Senin Admin Paneli</h1>
-                    <p class="lead opacity-75 mb-0">@ViewBag.Message</p>
-                    <span class="badge bg-white text-dark mt-3 px-3 py-2 rounded-pill">
-                        <i class="fa fa-user-circle me-1"></i> @User.Identity?.Name
-                    </span>
+            <div class="p-5 text-white shadow-lg mb-5" style="background-color: #E5007D; border-radius: 30px; position: relative; overflow: hidden;">
+                <div style="position: relative; z-index: 2;">
+                    <h1 class="display-4 fw-bold mb-2">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <span>İstanbul Senin Süper Admin Paneli</span>
+                        }
+                        else if (User.IsInRole("Editor"))
+                        {
+
+                            <span>İçerik ve Vitrin Yönetimi</span>
+                        }
+                        else if (User.IsInRole("Finance"))
+                        {
+
+                            <span>Mali Takip ve Bütçe Paneli</span>
+                        }
+                        else
+                        {
+
+                            <span>İstanbul Senin Admin Paneli</span>
+                        }
+                    </h1>
+                    <p class="lead opacity-75">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <span>Sistem genel yapısı ve tüm birimlerin denetimi.</span>
+                        }
+                        else if (User.IsInRole("Editor"))
+                        {
+
+                            <span>Duyurular ve uygulama vitrinini yönetebilirsiniz.</span>
+                        }
+                        else if (User.IsInRole("Finance"))
+                        {
+
+                            <span>Finansal hareketleri ve kampanya bütçelerini takip edin.</span>
+                        }
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge bg-white text-dark px-3 py-2 shadow-sm rounded-pill">
+                            <i class="fa fa-user-circle me-1" style="color: #E5007D;"></i> @User.Identity?.Name
+                        </span>
+                    </div>
                 </div>
-                <div class="d-none d-md-block">
-                    <i class="fa fa-chart-line fa-5x opacity-25"></i>
-                </div>
+                <i class="fa fa-chart-line" style="position: absolute; right: 40px; bottom: 40px; font-size: 150px; opacity: 0.1;"></i>
             </div>
         </div>
     </div>
