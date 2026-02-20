@@ -1,32 +1,36 @@
-using DenemeAdminPanel.Data;
-using DenemeAdminPanel.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using Microsoft.EntityFrameworkCore; 
+using Microsoft.AspNetCore.Authorization;
+using DenemeAdminPanel.Data;
+using System.Linq;
 
 namespace DenemeAdminPanel.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly AppDbContext _context;
-        public HomeController(AppDbContext context) { _context = context; }
 
-        public async Task<IActionResult> Index()
+        public HomeController(AppDbContext context)
         {
-            // Duyuru sayısını veritabanından çekip Dashboard'a gönderiyoruz
-            ViewBag.AnnouncementCount = await _context.Announcements.CountAsync();
-            return View();
+            _context = context;
         }
 
-        public IActionResult Privacy()
+        public IActionResult Index()
         {
-            return View();
-        }
+            // İstatistik Verileri
+            ViewBag.TotalAnnouncements = _context.Announcements.Count();
+            ViewBag.ActiveAnnouncements = _context.Announcements.Count(x => x.IsActive);
+            ViewBag.MiniAppCount = _context.MiniApps.Count();
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            // Kullanıcıya özel mesaj
+            if (User.IsInRole("Admin"))
+                ViewBag.Message = "Sistem tam yetki ile yönetiliyor.";
+            else if (User.IsInRole("Analyst"))
+                ViewBag.Message = "Veri analiz ve raporlama modu aktif.";
+            else
+                ViewBag.Message = "Personel işlem paneli.";
+
+            return View();
         }
     }
 }

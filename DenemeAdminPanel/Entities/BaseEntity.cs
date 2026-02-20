@@ -3,8 +3,11 @@
     public abstract class BaseEntity
     {
         public int Id { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public bool IsActive { get; set; } = true; // Görsellerdeki "Aktif" rozeti için
+
+       
+        public DateTime CreatedDate { get; set; }
+
+        public bool IsActive { get; set; } = true;
     }
 }
 //BaseEntity abstract (soyut) bir sınıftır.

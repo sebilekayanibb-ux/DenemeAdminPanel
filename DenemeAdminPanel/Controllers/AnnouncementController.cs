@@ -1,62 +1,61 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DenemeAdminPanel.Data;
 using DenemeAdminPanel.Entities;
-using DenemeAdminPanel.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DenemeAdminPanel.Controllers
 {
+    [Authorize]
     public class AnnouncementController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _webHost;
 
-        // Veritabanı bağlantısını Constructor üzerinden alıyoruz (Dependency Injection)
-        public AnnouncementController(AppDbContext context)
+        public AnnouncementController(AppDbContext context, IWebHostEnvironment webHost)
         {
             _context = context;
+            _webHost = webHost;
         }
 
-        // 1. LİSTELEME: Tüm duyuruları veritabanından çeker ve Index sayfasına gönderir.
         public async Task<IActionResult> Index()
         {
-            var announcements = await _context.Announcements.ToListAsync();
-            return View(announcements);
+            // Listeyi her zaman güncel sıralamaya göre getiriyoruz
+            return View(await _context.Announcements.OrderBy(x => x.DisplayOrder).ToListAsync());
         }
 
-        // 2. EKLEME (Görüntüleme): Yeni duyuru ekleme formunu açar.
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
-        // 3. EKLEME (Kaydetme): Formdan gelen veriyi veritabanına kaydeder.
-        [HttpPost]
-        [ValidateAntiForgeryToken] // Güvenlik için şart!
-        public async Task<IActionResult> Create(Announcement announcement)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(announcement);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index)); // Başarılıysa listeye dön
-            }
-            return View(announcement); // Hata varsa formu tekrar göster
-        }
-
-        // 4. SİLME: Belirli bir ID'ye sahip duyuruyu siler.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Create(Announcement announcement)
         {
-            var announcement = await _context.Announcements.FindAsync(id);
-            if (announcement != null)
+            if (announcement.ImageFile == null && string.IsNullOrEmpty(announcement.SelectedPresetImage))
             {
-                _context.Announcements.Remove(announcement);
-                await _context.SaveChangesAsync();
+                ModelState.AddModelError("ImageUrl", "Lütfen bir görsel ekleyin veya seçin!");
             }
-            return RedirectToAction(nameof(Index));
+
+            if (ModelState.IsValid)
+            {
+                if (announcement.ImageFile != null)
+                    announcement.ImageUrl = await SaveImage(announcement.ImageFile);
+                else if (!string.IsNullOrEmpty(announcement.SelectedPresetImage))
+                    announcement.ImageUrl = announcement.SelectedPresetImage;
+
+                announcement.CreatedDate = DateTime.Now;
+                _context.Add(announcement);
+                await _context.SaveChangesAsync();
+
+                // YENİ: Kayıt sonrası tüm sıraları 1'den başlayarak yeniden diz
+                await ReorderAllAnnouncements();
+
+                return RedirectToAction(nameof(Index));
+            }
+            return View(announcement);
         }
-        // 1. DÜZENLEME FORMU (Sayfayı Açar)
+
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
@@ -64,7 +63,6 @@ namespace DenemeAdminPanel.Controllers
             return View(announcement);
         }
 
-        // 2. GÜNCELLEME (Veriyi Kaydeder)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Announcement announcement)
@@ -76,22 +74,57 @@ namespace DenemeAdminPanel.Controllers
                 var existing = await _context.Announcements.FindAsync(id);
                 if (existing == null) return NotFound();
 
+                if (announcement.ImageFile != null)
+                    existing.ImageUrl = await SaveImage(announcement.ImageFile);
+                else if (!string.IsNullOrEmpty(announcement.SelectedPresetImage))
+                    existing.ImageUrl = announcement.SelectedPresetImage;
+
                 existing.Title = announcement.Title;
                 existing.Content = announcement.Content;
+                existing.StartDate = announcement.StartDate;
+                existing.EndDate = announcement.EndDate;
+                existing.DisplayOrder = announcement.DisplayOrder;
+                existing.IsActive = announcement.IsActive;
 
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    return NotFound();
-                }
+                await _context.SaveChangesAsync();
+
+                // YENİ: Düzenleme sonrası tüm sıraları 1'den başlayarak yeniden diz
+                await ReorderAllAnnouncements();
 
                 return RedirectToAction(nameof(Index));
             }
-
             return View(announcement);
+        }
+
+        // --- ARDIŞIK SIRALAMA MOTORU ---
+        // Bu metod, her işlemden sonra veritabanındaki tüm duyuruları gezer, 
+        // DisplayOrder'a göre dizer ve 1, 2, 3... diye boşluksuz numaralandırır.
+        private async Task ReorderAllAnnouncements()
+        {
+            var all = await _context.Announcements
+                .OrderBy(x => x.DisplayOrder)
+                .ThenByDescending(x => x.CreatedDate) // Aynı sıra numarasında yeniyi üste al
+                .ToListAsync();
+
+            int currentOrder = 1;
+            foreach (var item in all)
+            {
+                item.DisplayOrder = currentOrder++;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<string> SaveImage(IFormFile file)
+        {
+            string folder = "images/announcements/";
+            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            string path = Path.Combine(_webHost.WebRootPath, folder);
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+            using (var stream = new FileStream(Path.Combine(path, fileName), FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return "/" + folder + fileName;
         }
     }
 }
