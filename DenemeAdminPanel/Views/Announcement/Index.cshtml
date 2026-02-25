@@ -1,49 +1,76 @@
 ﻿@model IEnumerable<DenemeAdminPanel.Entities.Announcement>
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-dark">Duyuru Yönetimi</h3>
-        <div>
-            <button id="btnBulkDelete" class="btn btn-danger me-2" style="display:none;">
-                <i class="fa fa-trash"></i> Seçilenleri Sil
-            </button>
-            <a asp-action="Create" class="btn text-white" style="background-color: #E5007D;">
-                <i class="fa fa-plus"></i> Yeni Ekle
-            </a>
-        </div>
-    </div>
+@{
+    ViewData["Title"] = "Duyuru Yönetimi";
+}
 
-    <div class="table-responsive bg-white rounded shadow-sm p-3">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <p class="text-muted small">Duyuruları sürükleyerek sıralayabilir veya düzenleyebilirsiniz.</p>
+    </div>
+    <div class="col-auto">
+        @* Seçilenleri Sil Butonu *@
+        <button id="btnBulkDelete" class="btn btn-outline-danger btn-sm me-2 shadow-sm" style="display:none; border-radius: 8px;">
+            <i class="bi bi-trash3 me-1"></i> Seçilenleri Sil
+        </button>
+        <a asp-action="Create" class="btn text-white shadow-sm px-4" style="background-color: var(--ibb-pink); border-radius: 8px;">
+            <i class="bi bi-plus-lg me-1"></i> Yeni Duyuru Ekle
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
                 <tr>
-                    <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                    <th class="ps-4" style="width: 40px;">
+                        <input type="checkbox" id="selectAll" class="form-check-input">
+                    </th>
                     <th style="width: 40px;"></th>
-                    <th>Görsel</th>
+                    <th style="width: 100px;">Görsel</th>
                     <th>Başlık</th>
-                    <th>Sıra</th>
+                    <th class="text-center">Sıralama</th>
                     <th>Durum</th>
-                    <th>İşlemler</th>
+                    <th class="text-end pe-4">İşlemler</th>
                 </tr>
             </thead>
             <tbody id="sortable-body">
                 @foreach (var item in Model)
                 {
-                    <tr data-id="@item.Id" class="sortable-item">
-                        <td><input type="checkbox" class="select-item form-check-input" value="@item.Id"></td>
-                        <td><i class="fa fa-grip-vertical text-muted cursor-move" style="cursor:grab;"></i></td>
-                        <td>
-                            <img src="@item.ImageUrl" width="60" class="rounded" onerror="this.src='/images/no-image.jpg';">
+                    <tr data-id="@item.Id" class="sortable-item transition-all">
+                        <td class="ps-4">
+                            <input type="checkbox" class="select-item form-check-input" value="@item.Id">
                         </td>
-                        <td>@item.Title</td>
-                        <td class="display-order">@item.DisplayOrder</td>
                         <td>
-                            <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">
-                                @(item.IsActive ? "Aktif" : "Pasif")
+                            <i class="bi bi-grip-vertical text-muted fs-5 cursor-move" style="cursor: grab;"></i>
+                        </td>
+                        <td>
+                            <div class="position-relative" style="width: 60px; height: 40px;">
+                                <img src="@item.ImageUrl" class="rounded object-fit-cover w-100 h-100 border shadow-sm"
+                                     onerror="this.src='/images/no-image.jpg';" alt="Duyuru">
+                            </div>
+                        </td>
+                        <td class="fw-semibold">@item.Title</td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border display-order px-3 py-2">@item.DisplayOrder</span>
+                        </td>
+                        <td>
+                            <span class="badge-status @(item.IsActive ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")">
+                                <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                                @(item.IsActive ? "Yayında" : "Pasif")
                             </span>
                         </td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a>
+                        <td class="text-end pe-4">
+                            <div class="btn-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-white btn-sm border-end" title="Düzenle">
+                                    <i class="bi bi-pencil-square text-primary"></i>
+                                </a>
+                                @* Tekli Silme Butonu *@
+                                <a href="javascript:void(0)" onclick="singleDelete(@item.Id)" class="btn btn-white btn-sm" title="Sil">
+                                    <i class="bi bi-trash text-danger"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -55,11 +82,12 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-        // --- SÜRÜKLE BIRAK SIRALAMA ---
+        // --- 1. SÜRÜKLE BIRAK SIRALAMA ---
         const el = document.getElementById('sortable-body');
-        const sortable = new Sortable(el, {
+        new Sortable(el, {
             animation: 150,
-            handle: '.fa-grip-vertical',
+            handle: '.bi-grip-vertical',
+            ghostClass: 'bg-light',
             onEnd: function() {
                 let orderData = [];
                 document.querySelectorAll('#sortable-body tr').forEach((row, index) => {
@@ -69,37 +97,58 @@
                     });
                 });
 
-                // Sunucuya yeni sıralamayı gönder
                 fetch('/Announcement/UpdateOrder', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 }).then(res => {
                     if (res.ok) {
-                        // Sıra numaralarını ekranda güncelle
                         document.querySelectorAll('.display-order').forEach((td, i) => td.innerText = i + 1);
                     }
                 });
             }
         });
 
-        // --- TOPLU SİLME MANTIĞI ---
+        // --- 2. TEKLİ SİLME FONKSİYONU ---
+        function singleDelete(id) {
+            if (confirm('Bu duyuruyu silmek istediğinize emin misiniz?')) {
+                // Controller'daki Delete metoduna istek gönderiyoruz
+                fetch('/Announcement/Delete/' + id, {
+                    method: 'POST'
+                }).then(res => {
+                    if (res.ok) {
+                        location.reload(); // Başarılıysa sayfayı yenile
+                    } else {
+                        alert("Silme işlemi başarısız oldu.");
+                    }
+                });
+            }
+        }
+
+        // --- 3. TOPLU SİLME MANTIĞI ---
         const selectAll = document.getElementById('selectAll');
-        const items = document.querySelectorAll('.select-item');
         const bulkBtn = document.getElementById('btnBulkDelete');
 
+        // Hepsini Seç Checkbox'ı
         selectAll.addEventListener('change', () => {
+            const items = document.querySelectorAll('.select-item');
             items.forEach(i => i.checked = selectAll.checked);
             toggleBulkButton();
         });
 
-        items.forEach(i => i.addEventListener('change', toggleBulkButton));
+        // Alt Checkbox'lardan biri değiştiğinde "Toplu Sil" butonunu göster/gizle
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('select-item')) {
+                toggleBulkButton();
+            }
+        });
 
         function toggleBulkButton() {
             const selectedCount = document.querySelectorAll('.select-item:checked').length;
             bulkBtn.style.display = selectedCount > 0 ? 'inline-block' : 'none';
         }
 
+        // Toplu Silme Butonuna Tıklandığında
         bulkBtn.addEventListener('click', () => {
             if (confirm('Seçilen duyuruları silmek istediğinize emin misiniz?')) {
                 const ids = Array.from(document.querySelectorAll('.select-item:checked')).map(i => parseInt(i.value));
@@ -109,7 +158,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(ids)
                 }).then(res => {
-                    if (res.ok) location.reload();
+                    if (res.ok) {
+                        location.reload(); // Başarılıysa sayfayı yenile
+                    } else {
+                        alert("Toplu silme işlemi başarısız oldu.");
+                    }
                 });
             }
         });

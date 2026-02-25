@@ -1,9 +1,14 @@
-﻿namespace DenemeAdminPanel.Entities
+﻿namespace DenemeAdminPanel.Entities // Buranın tam olarak böyle olduğundan emin ol
 {
-    public class MiniApp : BaseEntity
+    public class MiniApp
     {
-        public string Name { get; set; } // Örn: İBB Wi-Fi
-        public string IconPath { get; set; } // İkon görseli yolu
-        public string AppUrl { get; set; } // Tıklayınca gideceği link
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string AppUrl { get; set; } = string.Empty;
+        public string? IconUrl { get; set; }
+        public string? PermissionText { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; }
     }
 }

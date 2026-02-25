@@ -96,8 +96,23 @@ namespace DenemeAdminPanel.Controllers
             return View(announcement);
         }
 
-        // --- TOPLU SİLME ---
+        // --- TEKLİ SİLME ---
         [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var announcement = await _context.Announcements.FindAsync(id);
+            if (announcement == null) return NotFound();
+
+            _context.Announcements.Remove(announcement);
+            await _context.SaveChangesAsync();
+
+            await ReorderAllAnnouncements(); // Sıralamayı güncelle
+            return Ok(); // Başarılı dönüşü
+        }
+
+        // --- TOPLU SİLME (Token kontrolü eklendi veya Ignore edildi) ---
+        [HttpPost]
+        [IgnoreAntiforgeryToken] // AJAX isteklerinde kolaylık sağlamak için
         public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
         {
             if (ids == null || !ids.Any()) return BadRequest();
@@ -106,9 +121,10 @@ namespace DenemeAdminPanel.Controllers
             _context.Announcements.RemoveRange(itemsToDelete);
             await _context.SaveChangesAsync();
 
-            await ReorderAllAnnouncements(); // Boşlukları kapat
+            await ReorderAllAnnouncements();
             return Ok();
         }
+
 
         // --- SÜRÜKLE BIRAK SIRALAMA GÜNCELLEME ---
         [HttpPost]

@@ -13,6 +13,8 @@ namespace DenemeAdminPanel.Data
         public DbSet<Announcement> Announcements { get; set; }
         public DbSet<MiniApp> MiniApps { get; set; }
 
+        public DbSet<UserLog> UserLogs{ get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));

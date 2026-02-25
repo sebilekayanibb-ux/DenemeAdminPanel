@@ -25,15 +25,15 @@
             <form asp-action="CreateUser" method="post" class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="small fw-bold text-muted">E-Posta Adresi</label>
-                    <input type="email" name="email" class="form-control" placeholder="orn: ad.soyad@ibb.istanbul" required />
+                    <input type="email" name="email" class="form-control shadow-sm" placeholder="orn: ad.soyad@ibb.istanbul" required />
                 </div>
                 <div class="col-md-3">
                     <label class="small fw-bold text-muted">Geçici Şifre</label>
-                    <input type="password" name="password" class="form-control" placeholder="******" required />
+                    <input type="password" name="password" class="form-control shadow-sm" placeholder="******" required />
                 </div>
                 <div class="col-md-3">
                     <label class="small fw-bold text-muted">Başlangıç Yetkisi</label>
-                    <select name="roleName" class="form-select" required>
+                    <select name="roleName" class="form-select shadow-sm" required>
                         <option value="">Rol Seçiniz...</option>
                         @foreach (var role in ViewBag.AllRoles)
                         {
@@ -63,6 +63,7 @@
                             <th class="ps-4">Personel</th>
                             <th>Mevcut Yetki</th>
                             <th class="text-center">Yetki Güncelle</th>
+                            <th class="text-center">İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -95,7 +96,7 @@
                                 <td>
                                     <form asp-action="AssignRole" method="post" class="d-flex gap-2 justify-content-center px-3">
                                         <input type="hidden" name="userId" value="@user.UserId" />
-                                        <select name="roleName" class="form-select form-select-sm" style="max-width: 150px;">
+                                        <select name="roleName" class="form-select form-select-sm shadow-sm" style="max-width: 130px;">
                                             <option value="">Değiştir...</option>
                                             @foreach (var role in ViewBag.AllRoles)
                                             {
@@ -106,6 +107,23 @@
                                             Onayla
                                         </button>
                                     </form>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <form asp-action="SendResetEmail" method="post" onsubmit="return confirm('@user.Email adresine şifre sıfırlama maili gönderilecek. Onaylıyor musunuz?')">
+                                            <input type="hidden" name="userId" value="@user.UserId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Şifre Sıfırlama Maili Gönder">
+                                                <i class="fa fa-envelope-open-text"></i>
+                                            </button>
+                                        </form>
+
+                                        <form asp-action="DeleteUser" method="post" onsubmit="return confirm('@user.Email personeli sistemden tamamen silinecek. Emin misiniz?')">
+                                            <input type="hidden" name="userId" value="@user.UserId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Sistemden Sil">
+                                                <i class="fa fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }

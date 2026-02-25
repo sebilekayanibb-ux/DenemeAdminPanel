@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="DenemeAdminPanel.Tests/DenemeAdminPanel.Tests.csproj" Id="18a0dc69-5a5d-4006-820b-2e093ef1072c" />
   <Project Path="DenemeAdminPanel/DenemeAdminPanel.csproj" />
 </Solution>

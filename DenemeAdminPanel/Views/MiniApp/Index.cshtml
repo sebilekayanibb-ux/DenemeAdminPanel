@@ -1,0 +1,181 @@
+﻿@model IEnumerable<DenemeAdminPanel.Entities.MiniApp>
+
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <h3 class="fw-bold text-dark m-0">Mini Uygulama Yönetimi</h3>
+        <p class="text-muted small">Mobil uygulamadaki ikon sırasını buradan belirleyebilirsiniz.</p>
+    </div>
+    <div class="col-auto">
+        @* TOPLU SİLME BUTONU - Varsayılan olarak gizli *@
+        <button id="btnBulkDelete" class="btn btn-outline-danger shadow-sm px-4 me-2" style="display:none; border-radius: 10px;">
+            <i class="bi bi-trash3 me-1"></i> Seçilenleri Sil
+        </button>
+        <a asp-action="Create" class="btn text-white shadow-sm px-4" style="background-color: var(--ibb-pink); border-radius: 10px;">
+            <i class="bi bi-plus-lg me-1"></i> Yeni Uygulama Ekle
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th style="width: 40px;" class="ps-3">
+                        <input type="checkbox" id="selectAll" class="form-check-input">
+                    </th>
+                    <th style="width: 50px;"></th>
+                    <th style="width: 100px;">İkon</th>
+                    <th>Uygulama Adı</th>
+                    <th>Durum</th>
+                    <th class="text-center">Sıra</th>
+                    <th class="text-end pe-4">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody id="sortable-body">
+                @foreach (var item in Model)
+                {
+                    <tr data-id="@item.Id" class="sortable-item">
+                        <td class="ps-3">
+                            <input type="checkbox" class="form-check-input select-item" value="@item.Id">
+                        </td>
+                        <td><i class="bi bi-grip-vertical text-muted fs-4 cursor-move"></i></td>
+                        <td>
+                            <img src="@item.IconUrl" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='/images/no-image.jpg';">
+                        </td>
+                        <td class="fw-bold text-dark">@item.Name</td>
+                        <td>
+                            <span class="badge @(item.IsActive ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary") px-3">
+                                @(item.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border display-order">@item.DisplayOrder</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-white border shadow-sm me-1">
+                                <i class="bi bi-pencil text-primary"></i>
+                            </a>
+                            @* TEKLİ SİLME BUTONU *@
+                            <button onclick="deleteApp(@item.Id, '@item.Name')" class="btn btn-sm btn-white border shadow-sm">
+                                <i class="bi bi-trash text-danger"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // --- SIRALAMA (SORTABLE) AYARLARI ---
+        const el = document.getElementById('sortable-body');
+        new Sortable(el, {
+            animation: 150,
+            handle: '.bi-grip-vertical',
+            onEnd: function() {
+                let orderData = [];
+                document.querySelectorAll('#sortable-body tr').forEach((row, index) => {
+                    orderData.push({ Id: parseInt(row.getAttribute('data-id')), NewOrder: index + 1 });
+                });
+                fetch('/MiniApp/UpdateOrder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                }).then(res => {
+                    if (res.ok) {
+                        document.querySelectorAll('.display-order').forEach((td, i) => td.innerText = i + 1);
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function () {
+            // --- BİLDİRİM (SWEETALERT) AYARLARI ---
+            var message = '@Html.Raw(TempData["SuccessMessage"])';
+            if (message && message !== '') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'İşlem Başarılı',
+                    text: message,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    iconColor: '#E5007D'
+                });
+            }
+
+            // --- TOPLU SEÇİM MANTIĞI ---
+            $('#selectAll').on('change', function() {
+                $('.select-item').prop('checked', this.checked);
+                toggleBulkDeleteButton();
+            });
+
+            $(document).on('change', '.select-item', function() {
+                toggleBulkDeleteButton();
+            });
+
+            function toggleBulkDeleteButton() {
+                const selectedCount = $('.select-item:checked').length;
+                if (selectedCount > 0) {
+                    $('#btnBulkDelete').fadeIn().text(`Seçilenleri Sil (${selectedCount})`);
+                } else {
+                    $('#btnBulkDelete').fadeOut();
+                }
+            }
+
+            // --- TOPLU SİLME İŞLEMİ ---
+            $('#btnBulkDelete').on('click', function() {
+                const selectedIds = $('.select-item:checked').map(function() { return parseInt($(this).val()); }).get();
+
+                Swal.fire({
+                    title: 'Toplu Silme',
+                    text: `${selectedIds.length} adet uygulamayı silmek istediğinize emin misiniz?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Hepsini Sil',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonText: 'Vazgeç'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/MiniApp/BulkDelete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(selectedIds)
+                        }).then(res => res.json()).then(res => {
+                            if (res.success) {
+                                window.location.reload();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // --- TEKLİ SİLME İŞLEMİ ---
+        function deleteApp(id, name) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: `"${name}" uygulamasını silmek üzeresiniz. Bu işlem geri alınamaz!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#E5007D',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'Vazgeç'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/MiniApp/Delete/' + id, function(res) {
+                        if (res.success) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

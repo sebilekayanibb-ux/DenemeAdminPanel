@@ -4,6 +4,7 @@ using DenemeAdminPanel.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DenemeAdminPanel.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225062634_UpdateMiniAppSchema")]
+    partial class UpdateMiniAppSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,6 +83,7 @@ namespace DenemeAdminPanel.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("IconUrl")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -155,21 +159,21 @@ namespace DenemeAdminPanel.Migrations
                         new
                         {
                             Id = "2c5e174e-3b0e-446f-86af-483d56fd7210",
-                            ConcurrencyStamp = "9864a2cf-7da2-49af-a71b-73c54138baa1",
+                            ConcurrencyStamp = "46aafbd8-68db-40c3-91cc-b41d1378903b",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "3d6f285f-4c1f-557g-97bg-594e67ge8321",
-                            ConcurrencyStamp = "3bda338f-b82f-4428-82ba-bb09c99cb93b",
+                            ConcurrencyStamp = "3164ce91-6b58-45f2-bbed-206b7ab57e04",
                             Name = "Editor",
                             NormalizedName = "EDITOR"
                         },
                         new
                         {
                             Id = "5f8h407i-6e3i-779i-19di-716g89ig0543",
-                            ConcurrencyStamp = "9517b169-f7df-4107-bcc6-bb8514f574c4",
+                            ConcurrencyStamp = "f8e1e848-4830-4815-a87f-abc310a2fa3b",
                             Name = "Finance",
                             NormalizedName = "FINANCE"
                         });

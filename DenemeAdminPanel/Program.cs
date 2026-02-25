@@ -1,6 +1,8 @@
 using DenemeAdminPanel.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity; // Identity için gerekli
+using DenemeAdminPanel.Services;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => {
 })
 .AddRoles<IdentityRole>() // İŞTE EKSİK OLAN SATIR BURASI!
 .AddEntityFrameworkStores<AppDbContext>();
+
+// MAILKIT SERVISI KAYDI
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // 4. Razor Pages Desteği (Identity'nin kendi sayfaları için zorunlu)
 builder.Services.AddRazorPages();

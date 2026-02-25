@@ -5,167 +5,232 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - İBB İstanbul Senin Admin</title>
 
+    @* Güvenlik Meta Etiketleri *@
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
         :root {
             --ibb-pink: #E5007D;
             --ibb-dark-bg: #1A1C1E;
-            --ibb-light-bg: #F8F9FA;
-            --ibb-text-gray: #ADB5BD;
-            --sidebar-width: 260px;
+            --ibb-light-bg: #F4F7F9;
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 85px;
         }
 
         body {
             background-color: var(--ibb-light-bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 0;
+            overflow-x: hidden;
         }
 
-        /* Sidebar Kapsayıcısı */
         .sidebar {
             width: var(--sidebar-width);
             position: fixed;
             top: 0;
             left: 0;
-            height: 100vh; /* Ekran yüksekliğine sabitle */
+            height: 100vh;
             background-color: var(--ibb-dark-bg);
-            z-index: 1030;
+            z-index: 1100;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
-            flex-direction: column; /* İçindekileri dikey diz */
-            transition: all 0.3s;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            flex-direction: column;
+        }
+
+            .sidebar.collapsed {
+                width: var(--sidebar-collapsed-width);
+            }
+
+        #sidebarToggle {
+            position: absolute;
+            right: 12px;
+            top: 25px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 1200;
+        }
+
+            #sidebarToggle:hover {
+                background: var(--ibb-pink);
+            }
+
+        .sidebar.collapsed #sidebarToggle {
+            right: 50%;
+            transform: translateX(50%);
         }
 
         .sidebar-brand {
             padding: 30px 20px;
-            text-align: center;
-            border-bottom: 1px solid #2D2F31;
-            flex-shrink: 0; /* Küçülmesini engelle */
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            white-space: nowrap;
+            overflow: hidden;
         }
 
-            .sidebar-brand h4 {
-                color: white;
-                font-weight: 700;
-                letter-spacing: 1px;
-                margin: 0;
-            }
+        .sidebar.collapsed .sidebar-brand h4,
+        .sidebar.collapsed .sidebar-brand small {
+            opacity: 0;
+            visibility: hidden;
+        }
 
-        /* Menü Listesi */
         .sidebar-nav {
-            flex-grow: 1; /* Boş alanı doldur */
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto; /* Çok link olursa içeride kaydır */
-            padding: 10px 0;
+            flex-grow: 1;
+            padding: 20px 0;
+            overflow-y: auto;
         }
 
             .sidebar-nav a {
-                color: var(--ibb-text-gray);
-                padding: 12px 25px;
+                color: #ADB5BD;
+                padding: 15px 25px;
                 display: flex;
                 align-items: center;
                 text-decoration: none;
-                transition: all 0.3s;
-                border-left: 4px solid transparent;
-                font-size: 0.95rem;
+                transition: 0.3s;
+                margin: 4px 12px;
+                border-radius: 10px;
             }
 
-                .sidebar-nav a:hover, .sidebar-nav a.active {
-                    color: white;
-                    background-color: #2D2F31;
-                    border-left: 4px solid var(--ibb-pink);
+                .sidebar-nav a i {
+                    font-size: 1.3rem;
+                    min-width: 40px;
                 }
 
-            .sidebar-nav i {
-                width: 30px;
-                font-size: 1.1rem;
-            }
-
-            .sidebar-nav .text-danger {
-                color: #dc3545 !important;
-            }
-
-                .sidebar-nav .text-danger:hover {
-                    background-color: rgba(220, 53, 69, 0.1) !important;
-                }
-
-        /* Ana İçerik */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 40px;
-            min-height: 100vh;
-            transition: all 0.3s;
+        .sidebar.collapsed .sidebar-nav a span {
+            display: none;
         }
 
-        @@media (max-width: 991.98px) {
-            .sidebar {
-                margin-left: calc(-1 * var(--sidebar-width));
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            color: white;
+            background: var(--ibb-pink);
+            box-shadow: 0 4px 12px rgba(229, 0, 125, 0.3);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            min-height: 100vh;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .main-content.expanded {
+                margin-left: var(--sidebar-collapsed-width);
             }
 
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-            }
+        .content-header h2 {
+            font-weight: 700;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-    <div class="sidebar shadow">
-        <div class="sidebar-brand">
-            <h4>İBB ADMIN</h4>
-            <small class="text-secondary">İstanbul Senin</small>
-        </div>
+    @if (User.Identity.IsAuthenticated && !Context.Request.Path.Value.Contains("ResetPassword") && !Context.Request.Path.Value.Contains("ForgotPassword"))
+    {
+        <div class="sidebar shadow" id="sidebar">
+            <button id="sidebarToggle" title="Menüyü Kapat/Aç">
+                <i class="bi bi-list"></i>
+            </button>
 
-        <div class="sidebar-nav">
-            <a asp-controller="Home" asp-action="Index" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
-                <i class="fa fa-home"></i> Dashboard
-            </a>
+            <div class="sidebar-brand">
+                <h4 class="text-white fw-bold m-0">İBB ADMIN</h4>
+                <small class="text-secondary">İstanbul Senin</small>
+            </div>
 
-            @if (User.IsInRole("Admin") || User.IsInRole("Editor"))
-            {
-                <a asp-controller="Announcement" asp-action="Index" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Announcement" ? "active" : "")">
-                    <i class="fa fa-bullhorn"></i> Duyuru Yönetimi
+            <div class="sidebar-nav">
+                @* Dashboard *@
+                <a asp-controller="Home" asp-action="Index"
+                   class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
+                    <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
                 </a>
-                <a href="#"><i class="fa fa-th-large"></i> Uygulama Vitrini</a>
-            }
 
-            @if (User.IsInRole("Admin") || User.IsInRole("Finance"))
-            {
-                <a href="#"><i class="fa fa-wallet"></i> Kampanya Bütçeleri</a>
-                <a href="#"><i class="fa fa-chart-line"></i> Finans Raporları</a>
-            }
-
-            @if (User.IsInRole("Admin"))
-            {
-                <a asp-controller="UserManagement" asp-action="Index" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "UserManagement" ? "active" : "")">
-                    <i class="fa fa-user-shield"></i> Personel Yetkileri
-                </a>
-            }
-
-            <div class="mt-auto pb-3">
-                <hr class="mx-3 text-secondary" />
-                <a href="#"><i class="fa fa-cog"></i> Ayarlar</a>
-                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" id="logoutForm">
-                    <a href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit()" class="text-danger fw-bold">
-                        <i class="fa fa-sign-out-alt"></i> Güvenli Çıkış
+                @* Duyuru Yönetimi *@
+                @if (User.IsInRole("Admin") || User.IsInRole("Editor"))
+                {
+                    <a asp-controller="Announcement" asp-action="Index"
+                       class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Announcement" ? "active" : "")">
+                        <i class="bi bi-megaphone"></i> <span>Duyuru Yönetimi</span>
                     </a>
-                </form>
+                }
+
+                @* Mini Uygulamalar *@
+                <a asp-controller="MiniApp" asp-action="Index"
+                   class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "MiniApp" ? "active" : "")">
+                    <i class="bi bi-app-indicator"></i> <span>Mini Uygulamalar</span>
+                </a>
+
+                @* Personel Yetkileri & Sistem Logları (Yetki Kontrolü Aktif) *@
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="UserManagement" asp-action="Index"
+                       class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "UserManagement" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                        <i class="bi bi-person-badge"></i> <span>Personel Yetkileri</span>
+                    </a>
+
+                    <a asp-controller="UserManagement" asp-action="SystemLogs"
+                       class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "UserManagement" && ViewContext.RouteData.Values["Action"]?.ToString() == "SystemLogs" ? "active" : "")">
+                        <i class="bi bi-terminal"></i> <span>Sistem Logları</span>
+                    </a>
+                }
+
+                <div class="mt-auto pb-4">
+                    <hr class="mx-3 border-secondary opacity-25" />
+                    <a asp-controller="Settings" asp-action="Index"
+                       class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")">
+                        <i class="bi bi-sliders"></i> <span>Ayarlar</span>
+                    </a>
+                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" id="logoutForm">
+                        <a href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit()" class="text-danger">
+                            <i class="bi bi-power"></i> <span>Güvenli Çıkış</span>
+                        </a>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    }
 
-    <div class="main-content">
+    <div class="@(User.Identity.IsAuthenticated && !Context.Request.Path.Value.Contains("ResetPassword") && !Context.Request.Path.Value.Contains("ForgotPassword") ? "main-content" : "container mt-5")" id="mainContent">
         <div class="container-fluid">
+            @if (User.Identity.IsAuthenticated && !Context.Request.Path.Value.Contains("ResetPassword") && !Context.Request.Path.Value.Contains("ForgotPassword"))
+            {
+                <div class="content-header">
+                    <h2>@ViewData["Title"]</h2>
+                </div>
+            }
             @RenderBody()
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#sidebarToggle").click(function () {
+                $("#sidebar").toggleClass("collapsed");
+                $("#mainContent").toggleClass("expanded");
+                localStorage.setItem("sidebarState", $("#sidebar").hasClass("collapsed") ? "closed" : "open");
+            });
+
+            if (localStorage.getItem("sidebarState") === "closed") {
+                $("#sidebar").addClass("collapsed");
+                $("#mainContent").addClass("expanded");
+            }
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
